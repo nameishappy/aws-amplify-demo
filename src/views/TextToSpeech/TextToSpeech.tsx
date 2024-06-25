@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
     PollyClient,
     ListLexiconsCommand,
@@ -8,12 +8,9 @@ import { SynthesizeSpeechCommand } from '@aws-sdk/client-polly'
 import fs from 'fs'
 
 const TextToSpeech = () => {
+    const [audioUrl, setAudioUrl] = useState<string | null>(null)
     const pollyClient = new PollyClient({
         region: 'us-east-1',
-        credentials: {
-            accessKeyId: 'kwnekjwn',
-            secretAccessKey: 'sjwj',
-        },
     })
 
     // Set the parameters
@@ -24,24 +21,36 @@ const TextToSpeech = () => {
     }
 
     // Create the command
-    const run = async () => {
+    const convertTextToSpeech = async () => {
         try {
             const data = await pollyClient.send(
                 new SynthesizeSpeechCommand(params)
             )
             // Save the audio stream to a file
             console.log(data)
-            const writeStream = fs.createWriteStream('speech.mp3')
-            writeStream.write(data.AudioStream)
-            writeStream.end()
-            console.log('The file was saved as speech.mp3!')
+            if (data.AudioStream) {
+                const audioBlob = new Blob([data.AudioStream.buffer], {
+                    type: 'audio/mpeg',
+                })
+                const url = URL.createObjectURL(audioBlob)
+                setAudioUrl(url)
+            }
         } catch (err) {
             console.error('Error', err)
         }
     }
 
-    run()
-    return <div>tts</div>
+    return (
+        <div>
+            <button
+                className="bg-blue-500 rounded-md p-2 text-white"
+                onClick={convertTextToSpeech}
+            >
+                Convert Text to Speech
+            </button>
+            {audioUrl && <audio controls src={audioUrl}></audio>}
+        </div>
+    )
 }
 
 export default TextToSpeech
