@@ -61,6 +61,8 @@
     "react-syntax-highlighter": "^15.5.0",
     "react-tooltip": "^5.11.1",
     "redux-persist": "^6.0.0",
+    "stream-to-blob": "^2.0.1",
+    "stream-to-buffer": "^0.1.0",
     "twin.macro": "^3.3.0",
     "yup": "^1.1.1"
   },

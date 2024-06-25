@@ -1,14 +1,15 @@
-import React, { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
     PollyClient,
-    ListLexiconsCommand,
     SynthesizeSpeechCommandInput,
 } from '@aws-sdk/client-polly'
 import { SynthesizeSpeechCommand } from '@aws-sdk/client-polly'
-import fs from 'fs'
+import AudioPlayer from './AudioPlayer'
 
 const TextToSpeech = () => {
     const [audioUrl, setAudioUrl] = useState<string | null>(null)
+    const [audioFile, setAudioFile] = useState<any>(null)
+    const audioRef = useRef<HTMLAudioElement | null | undefined>()
     const pollyClient = new PollyClient({
         region: 'us-east-1',
     })
@@ -28,13 +29,20 @@ const TextToSpeech = () => {
             )
             // Save the audio stream to a file
             console.log(data)
+            setAudioFile(data)
             if (data.AudioStream) {
-                const audioBlob = new Blob([data.AudioStream.buffer], {
-                    type: 'audio/mpeg',
-                })
-                const url = URL.createObjectURL(audioBlob)
-                setAudioUrl(url)
+                const streamdata = await (
+                    await data.AudioStream.transformToByteArray()
+                ).buffer
+                const audioURL = URL.createObjectURL(
+                    new Blob([streamdata], { type: 'audio/mpeg' })
+                )
+                audioRef.current.src = audioURL
+                console.log(streamdata)
+                // Set URL to state
+                // setAudioUrl(audioURL)
             }
+            console.log(audioUrl)
         } catch (err) {
             console.error('Error', err)
         }
@@ -48,7 +56,8 @@ const TextToSpeech = () => {
             >
                 Convert Text to Speech
             </button>
-            {audioUrl && <audio controls src={audioUrl}></audio>}
+            {audioUrl && <audio controls ref={audioRef}></audio>}
+            {/* <AudioPlayer audioFile={audioFile} /> */}
         </div>
     )
 }
